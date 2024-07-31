@@ -14,6 +14,10 @@ void MerkelMain::init()
 /*   loadOrderBook(); */
   int input;
   currentTime = orderBook.getEarliestTime();
+
+  wallet.inserCurrency("BTC",10);
+
+
   while(true)
   {
     printMenu();
@@ -34,7 +38,7 @@ void MerkelMain::printMenu()
     // 2 print exchange stats
     std::cout << "2: Print exchange stats " << std::endl;
     // 3 make an offer
-    std::cout << "3: Make an offer " << std::endl;
+    std::cout << "3: Make an ask " << std::endl;
     // 4 make a bid
     std::cout << "4: Make a bid " << std::endl;
     // 5 print wallet
@@ -80,32 +84,115 @@ void MerkelMain::printMenu()
     std::cout << "OrderBook asks: " << asks << "bids:" << bids << std::endl; */
   }
 
-  void MerkelMain::enterOffer()
+  void MerkelMain::enterAsk()
   {
-    std::cout << "Mark and offer - enter the amount" << std::endl;
+    std::cout << "Mark and ask - enter the amount: product, price, amount, eg ETH/BTC,200,0.5" << std::endl;
+    std::string input;
+/*     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+ */    std::getline(std::cin, input);
+
+    std::vector<std::string> tokens = CSVReader::tokenise(input, ',');
+    if (tokens.size() !=3)
+    {
+      std::cout << "MerkelMain::enterAsk Bad input! " << input << std::endl;
+    }
+    else {
+      try{
+      OrderBookEntry obe =CSVReader::stringsToOBE(
+          tokens[1],
+          tokens[2],
+          currentTime,
+          tokens[0],
+          OrderBookType::ask
+        );
+        if (wallet.canFulfillOrder(obe))
+        {
+          std::cout << "Wallet looks good. " << std::endl;
+          orderBook.insertOrder(obe);
+        }
+        else {
+          std::cout << "Wallet has insufficient fund. " << std::endl;
+        }
+
+      }catch (const std::exception& e)
+      {
+        std::cout << " MerkelMain::enterAsk Bad input! " << std::endl;
+      }
+    }
+
   }
 
   void MerkelMain::enterBid()
   {
-    std::cout << "Make a bid - enter the amount " << std::endl;
+    std::cout << "Make and bid - enter the amount: product, price, amount, eg ETH/BTC,200,0.5" << std::endl;
+    std::string input;
+    /*     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+     */
+    std::getline(std::cin, input);
+
+    std::vector<std::string> tokens = CSVReader::tokenise(input, ',');
+    if (tokens.size() != 3)
+    {
+      std::cout << "MerkelMain::enterBid Bad input! " << input << std::endl;
+    }
+    else
+    {
+      try
+      {
+        OrderBookEntry obe = CSVReader::stringsToOBE(
+            tokens[1],
+            tokens[2],
+            currentTime,
+            tokens[0],
+            OrderBookType::bid);
+        if (wallet.canFulfillOrder(obe))
+        {
+          std::cout << "Wallet looks good. " << std::endl;
+          orderBook.insertOrder(obe);
+        }
+        else
+        {
+          std::cout << "Wallet has insufficient fund. " << std::endl;
+        }
+      }
+      catch (const std::exception &e)
+      {
+        std::cout << " MerkelMain::enterBid Bad input! " << std::endl;
+      }
+    }
   }
 
   void MerkelMain::printWallet()
   {
-    std::cout << "Your wallet is empty." << std::endl;
+    std::cout << wallet.toString() << std::endl;
   }
 
   void MerkelMain::gotoNextTimeframe()
   {
     std::cout << "Going to next time frame." << std::endl;
+    std:: vector<OrderBookEntry> sales= orderBook.matchAsksToBids("ETH/BTC", currentTime);
+    std::cout << "Sales: " << sales.size() << std::endl;
+    for(OrderBookEntry& sale : sales)
+    {
+      std::cout << "Sale amount: " << sale.price << "amount" << sale.amount << std::endl;
+    }
+
+
     currentTime = orderBook.getNextTime(currentTime);
   }
 
   int MerkelMain::getUserOption()
   {
-    int userOption;
+    int userOption = 0;
+    std::string line;
     std::cout << " Type in 1-6 " << std::endl;
-    std::cin >> userOption;
+    std::getline(std::cin, line);
+    try{
+        userOption = std::stoi(line);
+    }catch(const std::exception& e)
+    {
+      //
+    }
     std::cout << "You chose: " << userOption << std::endl;
     return userOption;
   }
@@ -127,7 +214,7 @@ void MerkelMain::printMenu()
     }
     if (userOption == 3) // bad input
     {
-      enterOffer();
+      enterAsk();
     }
     if (userOption == 4) // bad input
     {
