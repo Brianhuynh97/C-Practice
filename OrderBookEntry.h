@@ -2,7 +2,7 @@
 
 #include<string>
 
-enum class OrderBookType{bid, ask, unknown, sale};
+enum class OrderBookType{bid, ask, unknown, asksale, bidsale};
 
 class OrderBookEntry
 {
@@ -11,7 +11,8 @@ public:
                  double _amount,
                  std::string _timestamp,
                  std::string _product,
-                 OrderBookType _orderType);
+                 OrderBookType _orderType,
+                 std::string username = "dataset");
   static OrderBookType stringToOrderBookType(std::string s);
 
   static bool compareByTimestamp(OrderBookEntry& e1, OrderBookEntry& e2)
@@ -34,4 +35,5 @@ public:
   std::string timestamp;
   std::string product;
   OrderBookType orderType;
+  std:: string username;
 };

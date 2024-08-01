@@ -105,6 +105,8 @@ void MerkelMain::printMenu()
           tokens[0],
           OrderBookType::ask
         );
+        obe.username = "simuser";
+
         if (wallet.canFulfillOrder(obe))
         {
           std::cout << "Wallet looks good. " << std::endl;
@@ -145,6 +147,8 @@ void MerkelMain::printMenu()
             currentTime,
             tokens[0],
             OrderBookType::bid);
+        obe.username = "simuser";
+
         if (wallet.canFulfillOrder(obe))
         {
           std::cout << "Wallet looks good. " << std::endl;
@@ -169,14 +173,22 @@ void MerkelMain::printMenu()
 
   void MerkelMain::gotoNextTimeframe()
   {
-    std::cout << "Going to next time frame." << std::endl;
-    std:: vector<OrderBookEntry> sales= orderBook.matchAsksToBids("ETH/BTC", currentTime);
-    std::cout << "Sales: " << sales.size() << std::endl;
-    for(OrderBookEntry& sale : sales)
+    std::cout << "Going to next time frame. " << std::endl;
+    for (std::string p : orderBook.getKnownProducts())
     {
-      std::cout << "Sale amount: " << sale.price << "amount" << sale.amount << std::endl;
+      std::cout << "matching " << p << std::endl;
+      std::vector<OrderBookEntry> sales = orderBook.matchAsksToBids(p, currentTime);
+      std::cout << "Sales: " << sales.size() << std::endl;
+      for (OrderBookEntry &sale : sales)
+      {
+        std::cout << "Sale price: " << sale.price << " amount " << sale.amount << std::endl;
+        if (sale.username == "simuser")
+        {
+          // update the wallet
+          wallet.processSale(sale);
+        }
+      }
     }
-
 
     currentTime = orderBook.getNextTime(currentTime);
   }
